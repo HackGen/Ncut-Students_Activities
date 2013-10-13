@@ -9,8 +9,10 @@ import com.google.analytics.tracking.android.EasyTracker;
 import android.os.Bundle;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.SharedPreferences;
 import android.view.Menu;
 import android.widget.ListView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
@@ -22,7 +24,16 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		listView1 = (ListView) findViewById(R.id.listView1);
+		init();
 		Refresh();
+	}
+
+	SharedPreferences settings = null;
+	int int_top_actid, int_top_actid_count = 0;
+
+	void init() {
+		settings = getPreferences(MODE_PRIVATE);
+		int_top_actid = settings.getInt("int_top_actid", -1);
 	}
 
 	String strPage;
@@ -157,6 +168,49 @@ public class MainActivity extends Activity {
 										strActionFullName, strDate,
 										strLocation, strChiefCoordinator,
 										strPhoneNumber, strIntroduction);
+								switch (int_top_actid_count) {
+								case -1:
+									/* Do Nothing! */
+
+									break;
+								case 0:
+									if (Integer.parseInt(actid) != int_top_actid) {
+										Toast.makeText(getApplicationContext(),
+												"發現新活動! 數量計算中...",
+												Toast.LENGTH_SHORT).show();
+										SharedPreferences.Editor editor = settings
+												.edit();
+										editor.putInt("int_top_actid",
+												Integer.parseInt(actid));
+										editor.commit();
+										int_top_actid_count++;
+									} else {
+										Toast.makeText(getApplicationContext(),
+												"沒有發現新活動!", Toast.LENGTH_SHORT)
+												.show();
+										int_top_actid_count = -1;
+									}
+									break;
+								case 101:
+									Toast.makeText(getApplicationContext(),
+											"發現超過100個新活動!", Toast.LENGTH_LONG)
+											.show();
+									int_top_actid_count = -1;
+									break;
+								default:
+									if (Integer.parseInt(actid) != int_top_actid) {
+										int_top_actid_count++;
+									} else {
+										Toast.makeText(
+												getApplicationContext(),
+												String.format("發現%d個新活動!",
+														int_top_actid_count),
+												Toast.LENGTH_LONG).show();
+
+										int_top_actid_count = -1;
+									}
+									break;
+								}
 							}
 						});
 						progressDiglog.dismiss();
